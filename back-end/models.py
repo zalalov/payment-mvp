@@ -43,7 +43,7 @@ class User(Base, ModelWithTimestamps):
     GENDER_NONE = 40
 
     id = Column(BigInteger, primary_key=True)
-    login = Column(Text, nullable=False)
+    login = Column(Text, nullable=False, unique=True)
     password = Column(Text, nullable=False)
     salt = Column(Text, nullable=False)
 
