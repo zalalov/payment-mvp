@@ -16,6 +16,9 @@ class Config:
     MAIN_VIEW = 'index.html'
     DIST_DIR = '../static/'
 
+    APP_HOST = os.environ.get('APP_HOST', 'localhost')
+    APP_PORT = os.environ.get('APP_PORT', 5000)
+
 
 class ProductionConfig(Config):
     pass
