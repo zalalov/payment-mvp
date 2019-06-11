@@ -71,6 +71,20 @@ class Account(Base, ModelWithTimestamps):
         self.balance = balance
 
 
+class Event(Base, ModelWithTimestamps):
+    __tablename__ = 'events'
+
+    id = Column(BigInteger, primary_key=True)
+    type = Column(BigInteger)
+    user_id = Column(BigInteger, ForeignKey(User.id), nullable=False)
+
+    user = relationship(User, backref='events')
+
+    def __init__(self, type, user_id):
+        self.type = type
+        self.user_id = user_id
+
+
 class Transaction(Base, ModelWithTimestamps):
     __tablename__ = 'transactions'
 
@@ -78,9 +92,11 @@ class Transaction(Base, ModelWithTimestamps):
     value = Column(Numeric, nullable=False)
     account_from_id = Column(BigInteger, ForeignKey(Account.id), nullable=False)
     account_to_id = Column(BigInteger, ForeignKey(Account.id), nullable=False)
+    event_id = Column(BigInteger, ForeignKey(Event.id), nullable=False)
 
     account_from = relationship(Account, backref='transactions')
     account_to = relationship(Account, backref='transactions')
+    event = relationship(Event, backref='event')
 
     def __init__(self, value, account_from_id, account_to_id):
         self.value = value
