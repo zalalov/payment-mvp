@@ -44,66 +44,6 @@ class User(Base, ModelWithTimestamps):
         self.password = password
 
 
-class Account(Base, ModelWithTimestamps):
-    __tablename__ = 'accounts'
-
-    TYPE_USD = 1000
-    TYPE_EUR = 2000
-    TYPE_CNY = 3000
-
-    AVAILABLE_TYPES = [
-        TYPE_USD,
-        TYPE_EUR,
-        TYPE_CNY
-    ]
-
-    id = Column(BigInteger, primary_key=True)
-    user_id = Column(BigInteger, ForeignKey(User.id), nullable=False)
-    balance = Column(Numeric, nullable=False, default=0)
-
-    user = relationship(User, backref='accounts')
-
-    def __init__(self, user_id, type, balance):
-        if type not in self.AVAILABLE_TYPES:
-            raise InvalidModelProperties()
-
-        self.user_id = user_id
-        self.balance = balance
-
-
-class Event(Base, ModelWithTimestamps):
-    __tablename__ = 'events'
-
-    id = Column(BigInteger, primary_key=True)
-    type = Column(BigInteger)
-    user_id = Column(BigInteger, ForeignKey(User.id), nullable=False)
-
-    user = relationship(User, backref='events')
-
-    def __init__(self, type, user_id):
-        self.type = type
-        self.user_id = user_id
-
-
-class Transaction(Base, ModelWithTimestamps):
-    __tablename__ = 'transactions'
-
-    id = Column(BigInteger, primary_key=True)
-    value = Column(Numeric, nullable=False)
-    account_from_id = Column(BigInteger, ForeignKey(Account.id), nullable=False)
-    account_to_id = Column(BigInteger, ForeignKey(Account.id), nullable=False)
-    event_id = Column(BigInteger, ForeignKey(Event.id), nullable=False)
-
-    account_from = relationship(Account, backref='transactions')
-    account_to = relationship(Account, backref='transactions')
-    event = relationship(Event, backref='event')
-
-    def __init__(self, value, account_from_id, account_to_id):
-        self.value = value
-        self.account_from_id = account_from_id
-        self.account_to_id = account_to_id
-
-
 class Currency(Base, ModelWithTimestamps):
     __tablename__ = 'currencies'
 
@@ -128,8 +68,8 @@ class CurrencyRate(Base, ModelWithTimestamps):
         self.currency_to_id = currency_to_id
 
 
-class TransferRule(Base, ModelWithTimestamps):
-    __tablename__ = 'exchange_rules'
+class Fee(Base, ModelWithTimestamps):
+    __tablename__ = 'fees'
 
     TYPE_INTERNAL_TRANSFER = 100
     TYPE_EXTERNAL_TRANSFER = 200
@@ -137,3 +77,66 @@ class TransferRule(Base, ModelWithTimestamps):
     id = Column(BigInteger, primary_key=True)
     type = Column(BigInteger, nullable=False, unique=True)
     percent = Column(Numeric, nullable=False, server_default='0')
+
+
+class Account(Base, ModelWithTimestamps):
+    __tablename__ = 'accounts'
+
+    TYPE_USD = 1000
+    TYPE_EUR = 2000
+    TYPE_CNY = 3000
+
+    AVAILABLE_TYPES = [
+        TYPE_USD,
+        TYPE_EUR,
+        TYPE_CNY
+    ]
+
+    id = Column(BigInteger, primary_key=True)
+    user_id = Column(BigInteger, ForeignKey(User.id), nullable=False)
+    balance = Column(Numeric, nullable=False, default=0)
+    currency_id = Column(BigInteger, nullable=False)
+
+    user = relationship(User, backref='accounts')
+    currency = relationship(Currency, backref='accounts')
+
+    def __init__(self, user_id, type, balance):
+        if type not in self.AVAILABLE_TYPES:
+            raise InvalidModelProperties()
+
+        self.user_id = user_id
+        self.balance = balance
+
+
+class Event(Base, ModelWithTimestamps):
+    __tablename__ = 'events'
+
+    id = Column(BigInteger, primary_key=True)
+    type = Column(BigInteger, nullable=False)
+    user_id = Column(BigInteger, ForeignKey(User.id), nullable=False)
+    account_from_id = Column(BigInteger, ForeignKey(Account.id), nullable=False)
+    account_to_id = Column(BigInteger, ForeignKey(Account.id), nullable=False)
+
+    user = relationship(User, backref='events')
+    account_from = relationship(Account, backref='transactions')
+    account_to = relationship(Account, backref='transactions')
+
+    def __init__(self, type, user_id, account_from_id, account_to_id):
+        self.type = type
+        self.user_id = user_id
+        self.account_from_id = account_from_id
+        self.account_to_id = account_to_id
+
+
+class Transaction(Base, ModelWithTimestamps):
+    __tablename__ = 'transactions'
+
+    id = Column(BigInteger, primary_key=True)
+    value = Column(Numeric, nullable=False)
+    event_id = Column(BigInteger, ForeignKey(Event.id), nullable=False)
+
+    event = relationship(Event, backref='event')
+
+    def __init__(self, value, event_id):
+        self.value = value
+        self.event_id = event_id
