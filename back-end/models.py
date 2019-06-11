@@ -1,4 +1,5 @@
-from sqlalchemy import Column, BigInteger, Numeric, DateTime, Text, func
+from sqlalchemy import Column, BigInteger, Numeric, DateTime, Text, func, ForeignKey
+from sqlalchemy.orm import relationship
 
 from database import Base
 from exceptions import InvalidModelProperties
@@ -21,18 +22,6 @@ class Role(Base, ModelWithTimestamps):
     def __init__(self, name):
         self.name = name
 
-    def to_json(self):
-        to_serialize = [
-            'id',
-            'login'
-        ]
-        d = {}
-
-        for attr_name in to_serialize:
-            d[attr_name] = getattr(self, attr_name)
-
-        return d
-
 
 class User(Base, ModelWithTimestamps):
     __tablename__ = 'users'
@@ -46,22 +35,13 @@ class User(Base, ModelWithTimestamps):
     login = Column(Text, nullable=False, unique=True)
     password = Column(Text, nullable=False)
     salt = Column(Text, nullable=False)
+    role_id = Column(BigInteger, ForeignKey(Role.id), nullable=False)
+
+    role = relationship(Role, backref='users')
 
     def __init__(self, email, password):
         self.email = email
         self.password = password
-
-    def to_json(self):
-        to_serialize = [
-            'id',
-            'login',
-        ]
-        d = {}
-
-        for attr_name in to_serialize:
-            d[attr_name] = getattr(self, attr_name)
-
-        return d
 
 
 class Account(Base, ModelWithTimestamps):
@@ -78,8 +58,10 @@ class Account(Base, ModelWithTimestamps):
     ]
 
     id = Column(BigInteger, primary_key=True)
-    user_id = Column(BigInteger, nullable=False)
+    user_id = Column(BigInteger, ForeignKey(User.id), nullable=False)
     balance = Column(Numeric, nullable=False, default=0)
+
+    user = relationship(User, backref='accounts')
 
     def __init__(self, user_id, type, balance):
         if type not in self.AVAILABLE_TYPES:
@@ -88,43 +70,54 @@ class Account(Base, ModelWithTimestamps):
         self.user_id = user_id
         self.balance = balance
 
-    def to_json(self):
-        to_serialize = [
-            'id',
-            'user_id',
-            'balance',
-        ]
-        d = {}
-
-        for attr_name in to_serialize:
-            d[attr_name] = getattr(self, attr_name)
-
-        return d
-
 
 class Transaction(Base, ModelWithTimestamps):
     __tablename__ = 'transactions'
 
     id = Column(BigInteger, primary_key=True)
     value = Column(Numeric, nullable=False)
-    account_from_id = Column(BigInteger, nullable=False)
-    account_to_id = Column(BigInteger, nullable=False)
+    account_from_id = Column(BigInteger, ForeignKey(Account.id), nullable=False)
+    account_to_id = Column(BigInteger, ForeignKey(Account.id), nullable=False)
+
+    account_from = relationship(Account, backref='transactions')
+    account_to = relationship(Account, backref='transactions')
 
     def __init__(self, value, account_from_id, account_to_id):
         self.value = value
         self.account_from_id = account_from_id
         self.account_to_id = account_to_id
 
-    def to_json(self):
-        to_serialize = [
-            'id',
-            'value',
-            'account_from_id',
-            'account_to_id',
-        ]
-        d = {}
 
-        for attr_name in to_serialize:
-            d[attr_name] = getattr(self, attr_name)
+class Currency(Base, ModelWithTimestamps):
+    __tablename__ = 'currencies'
 
-        return d
+    id = Column(BigInteger, primary_key=True)
+    ticker = Column(Text, nullable=False)
+
+    def __init__(self, ticker):
+        self.ticker = ticker
+
+
+class CurrencyRate(Base, ModelWithTimestamps):
+    __tablename__ = 'currency_rates'
+
+    currency_from_id = Column(BigInteger, ForeignKey(Currency.id), nullable=False, primary_key=True)
+    currency_to_id = Column(BigInteger, ForeignKey(Currency.id), nullable=False, primary_key=True)
+
+    currency_from = relationship(Currency)
+    currency_to = relationship(Currency)
+
+    def __init__(self, currency_from_id, currency_to_id):
+        self.currency_from_id = currency_from_id
+        self.currency_to_id = currency_to_id
+
+
+class TransferRule(Base, ModelWithTimestamps):
+    __tablename__ = 'exchange_rules'
+
+    TYPE_INTERNAL_TRANSFER = 100
+    TYPE_EXTERNAL_TRANSFER = 200
+
+    id = Column(BigInteger, primary_key=True)
+    type = Column(BigInteger, nullable=False, unique=True)
+    percent = Column(Numeric, nullable=False, server_default='0')

@@ -12,7 +12,7 @@ class Config:
         port=os.environ.get('POSTGRES_PORT', 5432),
         db=os.environ.get('POSTGRES_DB')
     )
-    VIEWS_PATH = './views'
+    VIEWS_PATH = './templates'
     MAIN_VIEW = 'index.html'
     DIST_DIR = '../static/'
 
