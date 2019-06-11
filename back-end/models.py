@@ -1,7 +1,7 @@
 from sqlalchemy import Column, BigInteger, Numeric, DateTime, Text, func, ForeignKey
 from sqlalchemy.orm import relationship
 
-from database import Base
+from app import db
 from exceptions import InvalidModelProperties
 
 
@@ -10,7 +10,7 @@ class ModelWithTimestamps:
     updated_at = Column(DateTime, nullable=False, server_default=func.now())
 
 
-class Role(Base, ModelWithTimestamps):
+class Role(db.Model, ModelWithTimestamps):
     __tablename__ = 'roles'
 
     ROLE_REGULAR = 100
@@ -23,7 +23,7 @@ class Role(Base, ModelWithTimestamps):
         self.name = name
 
 
-class User(Base, ModelWithTimestamps):
+class User(db.Model, ModelWithTimestamps):
     __tablename__ = 'users'
 
     GENDER_MALE = 10
@@ -39,12 +39,14 @@ class User(Base, ModelWithTimestamps):
 
     role = relationship(Role, backref='users')
 
-    def __init__(self, email, password):
-        self.email = email
+    def __init__(self, login, password, salt, role_id):
+        self.login = login
         self.password = password
+        self.salt = salt
+        self.role_id = role_id
 
 
-class Currency(Base, ModelWithTimestamps):
+class Currency(db.Model, ModelWithTimestamps):
     __tablename__ = 'currencies'
 
     id = Column(BigInteger, primary_key=True)
@@ -54,7 +56,7 @@ class Currency(Base, ModelWithTimestamps):
         self.ticker = ticker
 
 
-class CurrencyRate(Base, ModelWithTimestamps):
+class CurrencyRate(db.Model, ModelWithTimestamps):
     __tablename__ = 'currency_rates'
 
     currency_from_id = Column(BigInteger, ForeignKey(Currency.id), nullable=False, primary_key=True)
@@ -68,7 +70,7 @@ class CurrencyRate(Base, ModelWithTimestamps):
         self.currency_to_id = currency_to_id
 
 
-class Fee(Base, ModelWithTimestamps):
+class Fee(db.Model, ModelWithTimestamps):
     __tablename__ = 'fees'
 
     TYPE_INTERNAL_TRANSFER = 100
@@ -79,7 +81,7 @@ class Fee(Base, ModelWithTimestamps):
     percent = Column(Numeric, nullable=False, server_default='0')
 
 
-class Account(Base, ModelWithTimestamps):
+class Account(db.Model, ModelWithTimestamps):
     __tablename__ = 'accounts'
 
     TYPE_USD = 1000
@@ -108,7 +110,7 @@ class Account(Base, ModelWithTimestamps):
         self.balance = balance
 
 
-class Event(Base, ModelWithTimestamps):
+class Event(db.Model, ModelWithTimestamps):
     __tablename__ = 'events'
 
     id = Column(BigInteger, primary_key=True)
@@ -116,6 +118,7 @@ class Event(Base, ModelWithTimestamps):
     user_id = Column(BigInteger, ForeignKey(User.id), nullable=False)
     account_from_id = Column(BigInteger, ForeignKey(Account.id), nullable=False)
     account_to_id = Column(BigInteger, ForeignKey(Account.id), nullable=False)
+    account_to_idd = Column(BigInteger, ForeignKey(Account.id), nullable=False)
 
     user = relationship(User, backref='events')
     account_from = relationship(Account, backref='transactions')
@@ -128,7 +131,7 @@ class Event(Base, ModelWithTimestamps):
         self.account_to_id = account_to_id
 
 
-class Transaction(Base, ModelWithTimestamps):
+class Transaction(db.Model, ModelWithTimestamps):
     __tablename__ = 'transactions'
 
     id = Column(BigInteger, primary_key=True)
