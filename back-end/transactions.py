@@ -68,10 +68,6 @@ def convert(session, event, account_from, account_to, amount):
 
     converted_amount = amount * rate.value
 
-    print(amount)
-    print(rate.value)
-    print(converted_amount)
-
     transaction = Transaction()
     transaction.value = converted_amount
     transaction.type = Transaction.TYPE_CONVERT
