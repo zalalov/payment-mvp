@@ -19,9 +19,6 @@ class Role(db.Model, ModelWithTimestamps):
     id = Column(BigInteger, primary_key=True)
     name = Column(Text, nullable=False, unique=True)
 
-    def __init__(self, name):
-        self.name = name
-
 
 class User(db.Model, ModelWithTimestamps):
     __tablename__ = 'users'
@@ -38,21 +35,12 @@ class User(db.Model, ModelWithTimestamps):
 
     role = relationship(Role, backref='users')
 
-    def __init__(self, login, password, salt, role_id):
-        self.login = login
-        self.password = password
-        self.salt = salt
-        self.role_id = role_id
-
 
 class Currency(db.Model, ModelWithTimestamps):
     __tablename__ = 'currencies'
 
     id = Column(BigInteger, primary_key=True)
     ticker = Column(Text, nullable=False)
-
-    def __init__(self, ticker):
-        self.ticker = ticker
 
 
 class CurrencyRate(db.Model, ModelWithTimestamps):
@@ -64,10 +52,6 @@ class CurrencyRate(db.Model, ModelWithTimestamps):
 
     currency_from = relationship(Currency, foreign_keys=[currency_from_id])
     currency_to = relationship(Currency, foreign_keys=[currency_to_id])
-
-    def __init__(self, currency_from_id, currency_to_id):
-        self.currency_from_id = currency_from_id
-        self.currency_to_id = currency_to_id
 
 
 class Fee(db.Model, ModelWithTimestamps):
@@ -84,16 +68,6 @@ class Fee(db.Model, ModelWithTimestamps):
 class Account(db.Model, ModelWithTimestamps):
     __tablename__ = 'accounts'
 
-    TYPE_USD = 1000
-    TYPE_EUR = 2000
-    TYPE_CNY = 3000
-
-    AVAILABLE_TYPES = [
-        TYPE_USD,
-        TYPE_EUR,
-        TYPE_CNY
-    ]
-
     id = Column(BigInteger, primary_key=True)
     user_id = Column(BigInteger, ForeignKey(User.id), nullable=False)
     balance = Column(Numeric, nullable=False, server_default='0')
@@ -102,19 +76,11 @@ class Account(db.Model, ModelWithTimestamps):
     user = relationship(User, backref='accounts')
     currency = relationship(Currency, backref='accounts')
 
-    def __init__(self, user_id, type, balance):
-        if type not in self.AVAILABLE_TYPES:
-            raise InvalidModelProperties()
-
-        self.user_id = user_id
-        self.balance = balance
-
 
 class Event(db.Model, ModelWithTimestamps):
     __tablename__ = 'events'
 
     id = Column(BigInteger, primary_key=True)
-    type = Column(BigInteger, nullable=False)
     user_id = Column(BigInteger, ForeignKey(User.id), nullable=False)
     account_from_id = Column(BigInteger, ForeignKey(Account.id), nullable=False)
     account_to_id = Column(BigInteger, ForeignKey(Account.id), nullable=False)
@@ -122,12 +88,6 @@ class Event(db.Model, ModelWithTimestamps):
     user = relationship(User, backref='events')
     account_from = relationship(Account, foreign_keys=[account_from_id])
     account_to = relationship(Account, foreign_keys=[account_to_id])
-
-    def __init__(self, type, user_id, account_from_id, account_to_id):
-        self.type = type
-        self.user_id = user_id
-        self.account_from_id = account_from_id
-        self.account_to_id = account_to_id
 
 
 class Transaction(db.Model, ModelWithTimestamps):
@@ -138,7 +98,3 @@ class Transaction(db.Model, ModelWithTimestamps):
     event_id = Column(BigInteger, ForeignKey(Event.id), nullable=False)
 
     event = relationship(Event, backref='event')
-
-    def __init__(self, value, event_id):
-        self.value = value
-        self.event_id = event_id
