@@ -1,4 +1,4 @@
-from sqlalchemy import Column, BigInteger, Numeric, DateTime, Text, func, ForeignKey
+from sqlalchemy import Column, BigInteger, Numeric, DateTime, Text, Boolean, func, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app import db
@@ -13,20 +13,18 @@ class ModelWithTimestamps:
 class Role(db.Model, ModelWithTimestamps):
     __tablename__ = 'roles'
 
-    ROLE_REGULAR = 100
-    ROLE_ADMIN = 666
+    ROLE_REGULAR = 'regular'
+    ROLE_ADMIN = 'admin'
 
     id = Column(BigInteger, primary_key=True)
     name = Column(Text, nullable=False, unique=True)
 
+    def is_admin_role(self):
+        return self.name == self.ROLE_ADMIN
+
 
 class User(db.Model, ModelWithTimestamps):
     __tablename__ = 'users'
-
-    GENDER_MALE = 10
-    GENDER_FEMAIL = 20
-    GENDER_OTHER = 30
-    GENDER_NONE = 40
 
     id = Column(BigInteger, primary_key=True)
     login = Column(Text, nullable=False, unique=True)
@@ -34,6 +32,17 @@ class User(db.Model, ModelWithTimestamps):
     role_id = Column(BigInteger, ForeignKey(Role.id), nullable=False)
 
     role = relationship(Role, backref='users')
+
+    def is_admin(self):
+        return self.role.is_admin_role()
+
+    def get_account_by_currency(self, currency):
+        account = list(filter(lambda x: x.currency == currency, self.accounts))
+
+        if len(account):
+            return account[0]
+
+        return None
 
 
 class Currency(db.Model, ModelWithTimestamps):
@@ -76,25 +85,41 @@ class Account(db.Model, ModelWithTimestamps):
     user = relationship(User, backref='accounts')
     currency = relationship(Currency, backref='accounts')
 
+    def is_owner(self, user):
+        return user.id == self.user_id
+
+    def has_enough_funds(self, value):
+        return self.balance >= value
+
 
 class Event(db.Model, ModelWithTimestamps):
     __tablename__ = 'events'
 
+    STATUS_PENDING = 200
+    STATUS_SUCCESS = 300
+    STATUS_FAILED = 300
+
     id = Column(BigInteger, primary_key=True)
     user_id = Column(BigInteger, ForeignKey(User.id), nullable=False)
-    account_from_id = Column(BigInteger, ForeignKey(Account.id), nullable=False)
-    account_to_id = Column(BigInteger, ForeignKey(Account.id), nullable=False)
+    status = Column(BigInteger, nullable=False, default=STATUS_PENDING, server_default=str(STATUS_PENDING))
 
     user = relationship(User, backref='events')
-    account_from = relationship(Account, foreign_keys=[account_from_id])
-    account_to = relationship(Account, foreign_keys=[account_to_id])
 
 
 class Transaction(db.Model, ModelWithTimestamps):
     __tablename__ = 'transactions'
 
+    TYPE_TRANSFER = 100
+    TYPE_FEE = 200
+    TYPE_CONVERT = 300
+
     id = Column(BigInteger, primary_key=True)
     value = Column(Numeric, nullable=False)
+    type = Column(BigInteger, nullable=False)
     event_id = Column(BigInteger, ForeignKey(Event.id), nullable=False)
+    account_from_id = Column(BigInteger, ForeignKey(Account.id), nullable=False)
+    account_to_id = Column(BigInteger, ForeignKey(Account.id), nullable=False)
 
     event = relationship(Event, backref='event')
+    account_from = relationship(Account, foreign_keys=[account_from_id])
+    account_to = relationship(Account, foreign_keys=[account_to_id])

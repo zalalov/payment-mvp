@@ -24,7 +24,7 @@ class Config:
     ADMIN_LOGIN = os.environ.get('ADMIN_LOGIN')
     ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD')
 
-    DEFAULT_FEE = 0.05
+    DEFAULT_FEE = 0
 
 
 class ProductionConfig(Config):

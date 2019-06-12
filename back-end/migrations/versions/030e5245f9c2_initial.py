@@ -1,10 +1,16 @@
 """initial
 
-Revision ID: 737ca72721b9
-Revises:
-Create Date: 2019-06-12 11:07:01.702359
+Revision ID: 030e5245f9c2
+Revises: 
+Create Date: 2019-06-12 16:25:09.791203
 
 """
+# revision identifiers, used by Alembic.
+revision = '030e5245f9c2'
+down_revision = None
+branch_labels = None
+depends_on = None
+
 from alembic import op
 from sqlalchemy.sql import table, column
 import sqlalchemy as sa
@@ -12,13 +18,7 @@ from sqlalchemy import String, BigInteger, Numeric
 
 from config import get_configuration
 from users import generate_password_hash
-from models import Fee
-
-# revision identifiers, used by Alembic.
-revision = '737ca72721b9'
-down_revision = None
-branch_labels = None
-depends_on = None
+from models import Fee, Role
 
 
 def initial_values():
@@ -74,8 +74,8 @@ def initial_values():
     op.bulk_insert(
         roles_table,
         [
-            {'name': 'admin'},
-            {'name': 'regular'},
+            {'name': Role.ROLE_ADMIN},
+            {'name': Role.ROLE_REGULAR},
         ]
     )
     res = conn.execute("SELECT id FROM roles WHERE name = 'admin'")
@@ -187,14 +187,8 @@ def upgrade():
                     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
                     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
                     sa.Column('id', sa.BigInteger(), nullable=False),
-                    sa.Column('type', sa.BigInteger(), nullable=False),
                     sa.Column('user_id', sa.BigInteger(), nullable=False),
-                    sa.Column('account_from_id', sa.BigInteger(), nullable=False),
-                    sa.Column('account_to_id', sa.BigInteger(), nullable=False),
-                    sa.ForeignKeyConstraint(['account_from_id'], ['accounts.id'],
-                                            name=op.f('fk_events_account_from_id_accounts')),
-                    sa.ForeignKeyConstraint(['account_to_id'], ['accounts.id'],
-                                            name=op.f('fk_events_account_to_id_accounts')),
+                    sa.Column('status', sa.BigInteger(), server_default='100', nullable=False),
                     sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_events_user_id_users')),
                     sa.PrimaryKeyConstraint('id', name=op.f('pk_events'))
                     )
@@ -203,7 +197,14 @@ def upgrade():
                     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
                     sa.Column('id', sa.BigInteger(), nullable=False),
                     sa.Column('value', sa.Numeric(), nullable=False),
+                    sa.Column('type', sa.BigInteger(), nullable=False),
                     sa.Column('event_id', sa.BigInteger(), nullable=False),
+                    sa.Column('account_from_id', sa.BigInteger(), nullable=False),
+                    sa.Column('account_to_id', sa.BigInteger(), nullable=False),
+                    sa.ForeignKeyConstraint(['account_from_id'], ['accounts.id'],
+                                            name=op.f('fk_transactions_account_from_id_accounts')),
+                    sa.ForeignKeyConstraint(['account_to_id'], ['accounts.id'],
+                                            name=op.f('fk_transactions_account_to_id_accounts')),
                     sa.ForeignKeyConstraint(['event_id'], ['events.id'], name=op.f('fk_transactions_event_id_events')),
                     sa.PrimaryKeyConstraint('id', name=op.f('pk_transactions'))
                     )
