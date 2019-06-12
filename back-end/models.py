@@ -17,7 +17,7 @@ class Role(db.Model, ModelWithTimestamps):
     ROLE_ADMIN = 666
 
     id = Column(BigInteger, primary_key=True)
-    name = Column(Text, nullable=False)
+    name = Column(Text, nullable=False, unique=True)
 
     def __init__(self, name):
         self.name = name
@@ -34,7 +34,6 @@ class User(db.Model, ModelWithTimestamps):
     id = Column(BigInteger, primary_key=True)
     login = Column(Text, nullable=False, unique=True)
     password = Column(Text, nullable=False)
-    salt = Column(Text, nullable=False)
     role_id = Column(BigInteger, ForeignKey(Role.id), nullable=False)
 
     role = relationship(Role, backref='users')
@@ -61,9 +60,10 @@ class CurrencyRate(db.Model, ModelWithTimestamps):
 
     currency_from_id = Column(BigInteger, ForeignKey(Currency.id), nullable=False, primary_key=True)
     currency_to_id = Column(BigInteger, ForeignKey(Currency.id), nullable=False, primary_key=True)
+    value = Column(Numeric, nullable=False)
 
-    currency_from = relationship(Currency)
-    currency_to = relationship(Currency)
+    currency_from = relationship(Currency, foreign_keys=[currency_from_id])
+    currency_to = relationship(Currency, foreign_keys=[currency_to_id])
 
     def __init__(self, currency_from_id, currency_to_id):
         self.currency_from_id = currency_from_id
@@ -96,8 +96,8 @@ class Account(db.Model, ModelWithTimestamps):
 
     id = Column(BigInteger, primary_key=True)
     user_id = Column(BigInteger, ForeignKey(User.id), nullable=False)
-    balance = Column(Numeric, nullable=False, default=0)
-    currency_id = Column(BigInteger, nullable=False)
+    balance = Column(Numeric, nullable=False, server_default='0')
+    currency_id = Column(BigInteger, ForeignKey(Currency.id), nullable=False)
 
     user = relationship(User, backref='accounts')
     currency = relationship(Currency, backref='accounts')
@@ -118,11 +118,10 @@ class Event(db.Model, ModelWithTimestamps):
     user_id = Column(BigInteger, ForeignKey(User.id), nullable=False)
     account_from_id = Column(BigInteger, ForeignKey(Account.id), nullable=False)
     account_to_id = Column(BigInteger, ForeignKey(Account.id), nullable=False)
-    account_to_idd = Column(BigInteger, ForeignKey(Account.id), nullable=False)
 
     user = relationship(User, backref='events')
-    account_from = relationship(Account, backref='transactions')
-    account_to = relationship(Account, backref='transactions')
+    account_from = relationship(Account, foreign_keys=[account_from_id])
+    account_to = relationship(Account, foreign_keys=[account_to_id])
 
     def __init__(self, type, user_id, account_from_id, account_to_id):
         self.type = type
