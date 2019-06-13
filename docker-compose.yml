@@ -6,8 +6,6 @@ services:
     image: postgres:9.5
     env_file:
       - .env
-    ports:
-      - 5437:5432
     restart: unless-stopped
     networks:
       - app
@@ -17,8 +15,11 @@ services:
     build: ./back-end
     env_file:
       - .env
+    depends_on:
+      - db
     environment:
       POSTGRES_DB_ENDPOINT: db
+      WAIT_HOSTS: db:5432
     volumes:
       - ./dist:/dist
     restart: unless-stopped
