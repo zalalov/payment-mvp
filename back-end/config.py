@@ -18,13 +18,16 @@ class Config:
     MAIN_VIEW = 'index.html'
     DIST_DIR = '../static/'
 
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'i2cwjktgxb8x7nl712t4wkxj1n5b3xbb')
+    TOKEN_EXPIRE_HOURS = 1
+
     APP_HOST = os.environ.get('APP_HOST', 'localhost')
     APP_PORT = os.environ.get('APP_PORT', 5000)
 
     ADMIN_LOGIN = os.environ.get('ADMIN_LOGIN')
     ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD')
 
-    DEFAULT_FEE = 0
+    DEFAULT_FEE = 0.1
 
 
 class ProductionConfig(Config):

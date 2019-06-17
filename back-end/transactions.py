@@ -1,11 +1,9 @@
 from exceptions import PermissionDeniedException, DBRecordNotFound, TransferDifferentCurrenciesException
 from models import Transaction, CurrencyRate, Fee
-from config import get_configuration
+from app import app
 
 
 def transfer(session, event, account_from, account_to, amount, fee_account):
-    configuration = get_configuration()
-
     if account_from == account_to:
         return
 
@@ -29,7 +27,7 @@ def transfer(session, event, account_from, account_to, amount, fee_account):
     if account_from.user != account_to.user:
         fee_type = Fee.TYPE_EXTERNAL_TRANSFER
 
-    fee_percent = configuration.DEFAULT_FEE
+    fee_percent = app.config.get('DEFAULT_FEE')
     fee = session.query(Fee).filter(Fee.type == fee_type).one()
 
     if fee:

@@ -17,8 +17,7 @@ import sqlalchemy as sa
 from sqlalchemy import String, BigInteger, Numeric
 
 from config import get_configuration
-from users import generate_password_hash
-from models import Fee, Role
+from models import Fee, Role, User
 
 
 def initial_values():
@@ -91,7 +90,7 @@ def initial_values():
         [
             {
                 'login': configuration.ADMIN_LOGIN,
-                'password': generate_password_hash(configuration.ADMIN_PASSWORD),
+                'password': User.hash_password(configuration.ADMIN_PASSWORD),
                 'role_id': admin_role_id
             }
         ]

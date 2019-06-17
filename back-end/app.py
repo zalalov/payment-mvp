@@ -1,6 +1,7 @@
 from sqlalchemy import MetaData
 from flask import Flask, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
+from flask_restful import Api
 
 from config import get_configuration
 
@@ -17,3 +18,15 @@ app.config.from_object(get_configuration())
 
 metadata = MetaData(naming_convention=convention)
 db = SQLAlchemy(app, metadata=metadata)
+api = Api(app, prefix='/api')
+
+from rest import users, events, account
+
+api.add_resource(users.UserRegistration, '/register')
+api.add_resource(users.UserLogin, '/login')
+api.add_resource(users.UserLogout, '/logout')
+api.add_resource(users.Users, '/users')
+
+api.add_resource(events.Events, '/events')
+
+api.add_resource(account.Accounts, '/accounts')
