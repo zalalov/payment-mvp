@@ -38,17 +38,6 @@ api.add_resource(account.Accounts, '/accounts')
 api.add_resource(account.AccountTransfer, '/accounts/transfer')
 
 
-# @app.route('/<path:path>')
-# def send_static(path):
-#     print(path)
-#
-#     return send_from_directory('/dist', path)
-#
-# @app.route('/')
-# def index():
-#     return send_from_directory('/dist', 'index.html')
-
-
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
