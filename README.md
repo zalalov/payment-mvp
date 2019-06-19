@@ -20,5 +20,10 @@ ADMIN_PASSWORD=admin
 $ docker-compose up
 ```
 
+### Wait for Yarn finish building the project...
+### Visit http://localhost:5000
+
+
+
 ### Default `admin` user will be created
 Consider `admin` user as a default user to take fee from all external transfers between users.
