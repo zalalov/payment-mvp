@@ -15,7 +15,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build && mkdir -p ../dist && mv build/* ../dist/",
+    "build": "react-scripts build && mkdir -p ../dist && rm -r ../dist/* && mv build/* ../dist/",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
