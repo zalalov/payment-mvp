@@ -43,3 +43,8 @@ class TransferDifferentCurrenciesException(Exception):
         super(TransferDifferentCurrenciesException, self).__init__(
             message if message else 'Unable to make transfer between different currency accounts.'
         )
+
+
+class InvalidJSONRequest(Exception):
+    def __init__(self, message=None):
+        super(InvalidJSONRequest, self).__init__(message if message else 'Invalid JSON in request.')

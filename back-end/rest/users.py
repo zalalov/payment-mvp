@@ -3,7 +3,7 @@ from flask import request, abort, jsonify, url_for, make_response, g
 
 from models import User
 from users import create_user
-from users import login_required
+from decorators import login_required
 
 
 class UserRegistration(Resource):
@@ -13,13 +13,13 @@ class UserRegistration(Resource):
         confirmation = request.json.get('confirmation')
 
         if not all([login, password, confirmation]):
-            abort(400, {'message': 'Login, password, confirmation fields required.'})
+            return {'message': 'Login, password, confirmation fields required.'}, 400
 
         if password != confirmation:
-            abort(400, {'message': 'Password and confirmation have to be equal.'})
+            return {'message': 'Password and confirmation have to be equal.'}, 400
 
         if User.query.filter_by(login=login).first() is not None:
-            abort(400, {'message': 'User with the same login already exists.'})
+            return {'message': 'User with the same login already exists.'}, 400
 
         user = create_user(login, password)
         auth_token = user.encode_auth_token()
@@ -35,10 +35,10 @@ class UserLogin(Resource):
         user = User.find_by_login(login)
 
         if not user:
-            abort(404, {'message': 'User not found.'})
+            return {'message': 'User not found.'}, 404
 
         if not user.validate_user_password(password):
-            abort(403, {'message': 'Password is invalid.'})
+            return {'message': 'Password is invalid.'}, 403
 
         auth_token = user.encode_auth_token()
 
@@ -62,3 +62,14 @@ class Users(Resource):
         g.current_user = None
 
         return {'data': [user.to_json() for user in User.query.all()]}, 200
+
+
+class UserAccounts(Resource):
+    @login_required
+    def get(self, id, *args, **kwargs):
+        user = User.query.get(id)
+
+        if not user:
+            abort(404, 'User not found.')
+
+        return {'data': [account.to_json() for account in user.accounts]}, 200

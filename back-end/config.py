@@ -19,7 +19,7 @@ class Config:
     DIST_DIR = '../static/'
 
     SECRET_KEY = os.environ.get('SECRET_KEY', 'i2cwjktgxb8x7nl712t4wkxj1n5b3xbb')
-    TOKEN_EXPIRE_HOURS = 1
+    TOKEN_EXPIRE_HOURS = 24
 
     APP_HOST = os.environ.get('APP_HOST', 'localhost')
     APP_PORT = os.environ.get('APP_PORT', 5000)

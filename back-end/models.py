@@ -6,7 +6,6 @@ from sqlalchemy import Column, BigInteger, Numeric, DateTime, Text, Boolean, fun
 from sqlalchemy.orm import relationship
 
 from app import db, app
-from exceptions import InvalidModelProperties
 
 
 class ModelWithTimestamps:
@@ -54,8 +53,12 @@ class User(db.Model, ModelWithTimestamps):
 
         return None
 
-    def hash_password(self, password):
-        self.password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    def hash_and_save_password(self, password):
+        self.password = User.hash_password(password)
+
+    @staticmethod
+    def hash_password(password):
+        return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
     def validate_user_password(self, password):
         return bcrypt.checkpw(
@@ -71,7 +74,8 @@ class User(db.Model, ModelWithTimestamps):
         return {
             'id': self.id,
             'login': self.login,
-            'role': self.role.to_json()
+            'role': self.role.to_json(),
+            'accounts': [account.to_json() for account in self.accounts]
         }
 
     def encode_auth_token(self):
@@ -135,13 +139,17 @@ class Account(db.Model, ModelWithTimestamps):
     def has_enough_funds(self, value):
         return self.balance >= value
 
-    def to_json(self):
-        return {
+    def to_json(self, private=False):
+        data = {
             'id': self.id,
-            'user': self.user.to_json(),
-            'balance': float(self.balance),
-            'currency': self.currency.to_json()
+            'currency': self.currency.to_json(),
+            'user': self.user.login
         }
+
+        if private:
+            data['balance'] = float(self.balance)
+
+        return data
 
 
 class Event(db.Model, ModelWithTimestamps):
@@ -162,7 +170,8 @@ class Event(db.Model, ModelWithTimestamps):
             'id': self.id,
             'user_id': self.user_id,
             'status': self.status,
-            'transactions': [transaction.to_json() for transaction in self.transactions]
+            'transactions': [transaction.to_json() for transaction in self.transactions],
+            'created_at': datetime.datetime.timestamp(self.created_at)
         }
 
 
@@ -172,12 +181,6 @@ class Transaction(db.Model, ModelWithTimestamps):
     TYPE_TRANSFER = 100
     TYPE_FEE = 200
     TYPE_CONVERT = 300
-
-    TYPE_TITLES = {
-        TYPE_TRANSFER: 'transfer',
-        TYPE_FEE: 'fee',
-        TYPE_CONVERT: 'convert'
-    }
 
     id = Column(BigInteger, primary_key=True)
     value = Column(Numeric, nullable=False)
@@ -196,5 +199,5 @@ class Transaction(db.Model, ModelWithTimestamps):
             'account_from': self.account_from.to_json(),
             'account_to': self.account_to.to_json(),
             'value': float(self.value),
-            'type': self.TYPE_TITLES[self.type]
+            'type': self.type
         }

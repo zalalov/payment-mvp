@@ -1,11 +1,8 @@
-import jwt
+import bcrypt
 
-from functools import wraps
-from flask import abort, request, g
-
-from models import User, Account, Currency, Role
+from app import db
 from exceptions import InvalidDBSchemeStateException
-from app import db, app
+from models import User, Account, Currency, Role
 
 
 def create_user(login, password, role_id=None):
@@ -16,7 +13,7 @@ def create_user(login, password, role_id=None):
 
     user = User()
     user.login = login
-    user.hash_password(password)
+    user.hash_and_save_password(password)
 
     if role_id:
         role = db.session.query(Role).get(role_id)
@@ -48,30 +45,3 @@ def create_user(login, password, role_id=None):
 
 def get_admin_account():
     return db.session.query(User).join(Role).filter(Role.name == Role.ROLE_ADMIN).one()
-
-
-def login_required(method):
-    @wraps(method)
-    def wrapper(self):
-        header = request.headers.get('Authorization')
-        _, token = header.split()
-        decoded = {}
-
-        try:
-            decoded = jwt.decode(token, app.config['SECRET_KEY'], algorithms='HS256')
-        except jwt.DecodeError:
-            abort(400, message='Token is not valid.')
-        except jwt.ExpiredSignatureError:
-            abort(400, message='Token is expired.')
-
-        login = decoded['login']
-        user = User.find_by_login(login)
-
-        if not user:
-            abort(400, message='User not found.')
-
-        g.current_user = user
-
-        return method(self)
-
-    return wrapper

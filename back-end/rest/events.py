@@ -2,7 +2,8 @@ from flask_restful import Resource
 from flask import request, abort, jsonify, url_for, make_response, g
 
 from models import User
-from users import create_user, login_required
+from users import create_user
+from decorators import login_required
 
 
 class Events(Resource):

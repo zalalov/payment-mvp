@@ -47,3 +47,5 @@ def create_event(user, account_from, account_to, amount):
         event.status = Event.STATUS_FAILED
 
     db.session.commit()
+
+    return event

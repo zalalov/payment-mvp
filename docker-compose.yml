@@ -10,6 +10,16 @@ services:
     networks:
       - app
 
+  front-end:
+    container_name: front-end
+    build: ./front-end
+    env_file:
+      - .env
+    volumes:
+      - ./dist:/dist
+    networks:
+      - app
+
   back-end:
     container_name: back-end
     build: ./back-end
@@ -20,11 +30,11 @@ services:
     environment:
       POSTGRES_DB_ENDPOINT: db
       WAIT_HOSTS: db:5432
+    ports:
+      - 5000:${APP_PORT}
     volumes:
       - ./dist:/dist
     restart: unless-stopped
-    volumes:
-      - ./static:/static
     networks:
       - app
 
