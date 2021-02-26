@@ -1,4 +1,4 @@
-aiohttp==3.5.4
+aiohttp==3.7.4
 aiohttp-autoreload==0.0.1
 aiohttp-jinja2==1.1.1
 alembic==1.0.10
